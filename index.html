@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Assistant v2</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <style>
+        :root {
+            --text-color: #EAEAEA;
+            --text-secondary-color: #A0A0A0;
+            --user-message-bg: rgba(88, 101, 242, 0.6);
+            --assistant-message-bg: rgba(58, 59, 64, 0.7);
+            --container-bg: rgba(30, 31, 34, 0.75);
+            --border-color: rgba(255, 255, 255, 0.15);
+            --shadow-color: rgba(0, 0, 0, 0.2);
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(125deg, #1D2B64, #F8CDDA, #1D2B64);
+            background-size: 400% 400%;
+            animation: backgroundGradient 15s ease infinite;
+        }
+
+        @keyframes backgroundGradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 95vh;
+            max-height: 850px;
+            width: 100%;
+            max-width: 550px;
+            margin: auto;
+            border-radius: 24px;
+            box-shadow: 0 8px 32px 0 var(--shadow-color);
+            background: var(--container-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px); /* For Safari */
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        .header {
+            padding: 20px;
+            text-align: center;
+            font-size: 22px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            background: rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid var(--border-color);
+            flex-shrink: 0;
+        }
+
+        .chatbox {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .chatbox::-webkit-scrollbar {
+            width: 8px;
+        }
+        .chatbox::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .chatbox::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+        .chatbox::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .chat-message {
+            padding: 12px 18px;
+            border-radius: 20px;
+            max-width: 85%;
+            word-wrap: break-word;
+            animation: fadeIn 0.4s ease-out;
+            line-height: 1.6;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .user-message {
+            align-self: flex-end;
+            background: var(--user-message-bg);
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+
+        .assistant-message {
+            align-self: flex-start;
+            background-color: var(--assistant-message-bg);
+            color: var(--text-color);
+            border-bottom-left-radius: 5px;
+        }
+
+        .input-area {
+            padding: 15px 20px;
+            border-top: 1px solid var(--border-color);
+            background: rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .input-wrapper {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            background: rgba(0,0,0,0.3);
+            border-radius: 25px;
+            padding: 0 5px 0 20px;
+            border: 1px solid transparent;
+            transition: border-color 0.3s;
+        }
+
+        .input-wrapper:focus-within {
+             border-color: rgba(88, 101, 242, 0.8);
+        }
+
+        .input-wrapper input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text-color);
+            font-size: 16px;
+            padding: 12px 0;
+        }
+        
+        .input-wrapper input::placeholder {
+            color: var(--text-secondary-color);
+        }
+
+        .input-area button {
+            padding: 10px;
+            border: none;
+            border-radius: 50%;
+            background-color: transparent;
+            color: var(--text-secondary-color);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s, background-color 0.2s;
+        }
+        
+        .input-area button:hover {
+            color: var(--text-color);
+            background-color: rgba(255,255,255,0.1);
+        }
+
+        #micButton.listening .material-icons {
+            color: #FF5C5C;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes pulse {
+            0% { text-shadow: 0 0 5px rgba(255, 92, 92, 0); }
+            50% { text-shadow: 0 0 15px rgba(255, 92, 92, 0.8); }
+            100% { text-shadow: 0 0 5px rgba(255, 92, 92, 0); }
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">AI Chat</div>
+        <div id="chatbox" class="chatbox"></div>
+        <div class="input-area">
+            <div class="input-wrapper">
+                <input id="chatInput" type="text" placeholder="質問をどうぞ..." />
+                <button id="micButton" title="音声入力">
+                    <span class="material-icons">mic</span>
+                </button>
+            </div>
+            <button id="sendButton" title="送信">
+                <span class="material-icons">send</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // JavaScript部分は前回と同じで動作するため、変更ありません。
+        // （ただし、HTML構造の変更に合わせて一部の要素取得を調整）
+        const sendButton = document.getElementById("sendButton");
+        const micButton = document.getElementById("micButton");
+        const chatInput = document.getElementById('chatInput');
+        const chatbox = document.getElementById('chatbox');
+
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition;
+
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.lang = 'ja-JP';
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
+
+            recognition.onstart = () => {
+                micButton.classList.add('listening');
+                chatInput.placeholder = "話してください...";
+            };
+            recognition.onresult = (event) => {
+                chatInput.value = event.results[0][0].transcript;
+            };
+            recognition.onerror = (event) => {
+                console.error("音声認識エラー:", event.error);
+                chatInput.placeholder = "エラーが発生しました";
+            };
+            recognition.onend = () => {
+                micButton.classList.remove('listening');
+                chatInput.placeholder = "質問をどうぞ...";
+            };
+            micButton.addEventListener('click', () => {
+                recognition.start();
+            });
+        } else {
+            micButton.style.display = 'none';
+            console.warn("このブラウザは音声認識をサポートしていません。");
+        }
+
+        async function displayMessage(message, isUser) {
+            const msgElem = document.createElement('div');
+            msgElem.textContent = message;
+            msgElem.className = `chat-message ${isUser ? 'user-message' : 'assistant-message'}`;
+            chatbox.appendChild(msgElem);
+            chatbox.scrollTop = chatbox.scrollHeight;
+        }
+
+        async function callApi(apiUrl, prompt) {
+            chatInput.disabled = true;
+            sendButton.disabled = true;
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({prompt})
+            });
+            chatInput.disabled = false;
+            sendButton.disabled = false;
+            chatInput.focus();
+            return response.json();
+        }
+
+        async function handleSend() {
+            const message = chatInput.value.trim();
+            if (!message) return;
+            displayMessage(message, true);
+            chatInput.value = '';
+            const apiUrl = message.startsWith('/image') 
+                ? 'https://backend.buildpicoapps.com/aero/run/image-generation-api?pk=v1-Z0FBQUFBQm5HUEtMSjJkakVjcF9IQ0M0VFhRQ0FmSnNDSHNYTlJSblE0UXo1Q3RBcjFPcl9YYy1OZUhteDZWekxHdWRLM1M1alNZTkJMWEhNOWd4S1NPSDBTWC12M0U2UGc9PQ==' 
+                : 'https://backend.buildpicoapps.com/aero/run/llm-api?pk=v1-Z0FBQUFBQm5HUEtMSjJkakVjcF9IQ0M0VFhRQ0FmSnNDSHNYTlJSblE0UXo1Q3RBcjFPcl9YYy1OZUhteDZWekxHdWRLM1M1alNZTkJMWEhNOWd4S1NPSDBTWC12M0U2UGc9PQ==';
+
+            try {
+                const loadingElem = document.createElement('div');
+                loadingElem.className = 'chat-message assistant-message';
+                loadingElem.textContent = '...';
+                chatbox.appendChild(loadingElem);
+                chatbox.scrollTop = chatbox.scrollHeight;
+
+                const data = await callApi(apiUrl, message);
+                chatbox.removeChild(loadingElem);
+
+                if (data.status === 'success') {
+                    displayMessage(data.text, false);
+                } else {
+                    displayMessage('エラーが発生しました。もう一度お試しください。', false);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                displayMessage('エラーが発生しました。もう一度お試しください。', false);
+            }
+        }
+        
+        chatInput.focus();
+        sendButton.addEventListener('click', handleSend);
+        chatInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                handleSend();
+            }
+        });
+    </script>
+</body>
+</html>
